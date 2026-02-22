@@ -14,6 +14,7 @@ const budgetSchema = new mongoose.Schema(
     },
     month: String,
     emoji: String,
+   
     ExpenseItems: {
       type: Number,
       default: 0,

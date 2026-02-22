@@ -1,15 +1,28 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useContext, useState } from "react";
 import { ExpenseContextData } from "../Context/ExpenseContextTypes";
+import axios from "../utils/axiosConfig"
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const {setData} = useContext(ExpenseContextData);
   const navigate = useNavigate();
-  const handleLogout = ()=>{
-    localStorage.removeItem("token");
+  const handleLogout = async()=>{
+  try{
+    const response = await axios.get("auth/logout")
+    console.log(response.data);
+    if( response.data.message === "Logged out successfully"){
+       localStorage.removeItem("token");
   setData(prev => ({ ...prev, token: "" }));
+    
   navigate("/login");
+    }
+    
+  }
+  catch(err){
+    console.log(err);
+    
+  }
   }
   return (
     <nav className="w-full bg-white shadow-md px-6 sm:px-8 py-4 relative">

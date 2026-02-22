@@ -1,46 +1,43 @@
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
 import axios from "../utils/axiosConfig";
 import { ExpenseContextData } from "../Context/ExpenseContextTypes";
+
+type FormData = {
+  email: string;
+  password: string;
+};
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const { setData } = useContext(ExpenseContextData)!;
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<FormData>({mode: "onChange"});
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const onSubmit = async (data: FormData) => {
     try {
-      setLoading(true);
-
-      const response = await axios.post("auth/login", {
-        email,
-        password,
+      const response = await axios.post("auth/login", data, {
+        withCredentials: true, // 🔥 important for cookies
       });
 
-      const token = response.data.token;
+      setData((prev) => ({
+        ...prev,
+        token: response.data.token,
+      }));
 
-      // Save token
-      setData(prev => ({ ...prev, token }));
-
-      alert("Login successful!");
       navigate("/");
-
     } catch (err: any) {
-      const message =
-        err.response?.data?.message || "Something went wrong";
-      alert(message);
-    } finally {
-      setLoading(false);
+      alert(err.response?.data?.message || "Something went wrong");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-white via-gray-50 to-gray-100">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-linear-to-br from-white via-gray-50 to-gray-100">
       <div className="w-full max-w-md bg-white/80 backdrop-blur-xl shadow-2xl rounded-2xl p-8 border border-gray-100">
 
         <div className="text-center mb-8">
@@ -52,42 +49,67 @@ const Login: React.FC = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
+          {/* EMAIL */}
           <div>
             <label className="text-sm font-medium text-gray-700">
               Email Address
             </label>
             <input
               type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="mt-2 w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all duration-300"
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value:
+                    /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: "Enter a valid email address",
+                },
+              })}
+              className={`mt-2 w-full px-4 py-3 rounded-xl border ${
+                errors.email ? "border-red-500" : "border-gray-200"
+              } bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all duration-300`}
             />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
+          {/* PASSWORD */}
           <div>
             <label className="text-sm font-medium text-gray-700">
               Password
             </label>
             <input
               type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="mt-2 w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all duration-300"
+              {...register("password", {
+                required: "Password is required",
+                minLength: {
+                  value: 6,
+                  message: "Password must be at least 6 characters",
+                },
+              })}
+              className={`mt-2 w-full px-4 py-3 rounded-xl border ${
+                errors.password ? "border-red-500" : "border-gray-200"
+              } bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all duration-300`}
             />
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.password.message}
+              </p>
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="w-full py-3 rounded-xl bg-gray-900 text-white font-medium hover:bg-gray-800 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50"
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {isSubmitting ? "Signing in..." : "Sign In"}
           </button>
         </form>
 

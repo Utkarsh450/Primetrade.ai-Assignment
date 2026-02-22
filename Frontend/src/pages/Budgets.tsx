@@ -34,8 +34,8 @@ const Budgets: React.FC = () => {
       emoji: selectedEmoji,
       ExpenseItems: 0,
       createdAt: new Date(),
+      
     };
-
     setData((prev) => ({
       ...prev,
       budgets: [...prev.budgets, newBudget],
