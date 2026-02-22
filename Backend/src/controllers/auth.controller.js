@@ -27,16 +27,14 @@ async function RegisterController(req, res) {
     });
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false,
-     
-	  sameSite: "lax",
+       secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     });
 
     res
       .status(201)
       .json({
         user: { id: user._id, username: user.username, email: user.email },
-        token,
       });
   } catch (err) {
     res.status(500).json({ message: err.message || "Server error" });
@@ -60,15 +58,14 @@ async function LoginController(req, res) {
     });
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     });
 
     res
       .status(200)
       .json({
         user: { id: user._id, username: user.username, email: user.email },
-        token,
       });
   } catch (err) {
     res.status(500).json({ message: err.message || "Server error" });
@@ -78,11 +75,20 @@ async function LoginController(req, res) {
 async function LogoutController(req,res,next){
 	 res.clearCookie("token", {
     httpOnly: true,
-    secure: false,
-    sameSite: "lax"
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   });
 
   return res.status(200).json({ message: "Logged out successfully" });
 }
+async function ProtectedRoute (req, res, next){
+  try {
+    const user = await User.findById(req.user.id).select("-password");
 
-module.exports = { RegisterController, LoginController, LogoutController };
+    res.status(200).json({ user });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+}
+
+module.exports = { RegisterController, LoginController, LogoutController, ProtectedRoute };

@@ -1,23 +1,39 @@
 import { createContext } from "react";
 import type { BudgetData, ExpenseData } from "./types";
 
-// Context type
+export interface UserType {
+  _id: string;
+  username: string;
+  email: string;
+}
+
 export interface ExpenseContextType {
-    data: {
-        token: string,
-        budgets: BudgetData[];
-        expenses: ExpenseData[];
-    };
-    setData: React.Dispatch<
-        React.SetStateAction<{
-            token: string,
-            budgets: BudgetData[];
-            expenses: ExpenseData[];
-        }>
-    >;
+  data: {
+    user: UserType | null;
+    isAuthenticated: boolean;
+    loading: boolean;
+    budgets: BudgetData[];
+    expenses: ExpenseData[];
+  };
+
+  setData: React.Dispatch<
+    React.SetStateAction<{
+      user: UserType | null;
+      isAuthenticated: boolean;
+      loading: boolean;
+      budgets: BudgetData[];
+      expenses: ExpenseData[];
+    }>
+  >;
 }
 
 export const ExpenseContextData = createContext<ExpenseContextType>({
-    data: { token: "", budgets: [], expenses: [] },
-    setData: () => {}
+  data: {
+    user: null,
+    isAuthenticated: false,
+    loading: true,
+    budgets: [],
+    expenses: [],
+  },
+  setData: () => {},
 });

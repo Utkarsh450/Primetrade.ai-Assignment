@@ -15,7 +15,7 @@ const MainRoutes: React.FC = () => {
         <Route path="/budgets" element={<AuthWrapper><Budgets/></AuthWrapper>   }/>
         <Route path="/login" element={<Login/>}/>
         <Route path="/register" element={<Register/>}/>
-        <Route path="/budgets/:expenseId" element={<AuthWrapper><BudgetExpenses/></AuthWrapper>}/>
+        <Route path="/budgets/:id" element={<AuthWrapper><BudgetExpenses/></AuthWrapper>}/>
         <Route path="/expenses" element={<AuthWrapper><Expenses/></AuthWrapper>}/>
 
 

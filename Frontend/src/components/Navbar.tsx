@@ -8,21 +8,15 @@ const Navbar = () => {
   const {setData} = useContext(ExpenseContextData);
   const navigate = useNavigate();
   const handleLogout = async()=>{
-  try{
-    const response = await axios.get("auth/logout")
-    console.log(response.data);
-    if( response.data.message === "Logged out successfully"){
-       localStorage.removeItem("token");
-  setData(prev => ({ ...prev, token: "" }));
-    
-  navigate("/login");
-    }
-    
-  }
-  catch(err){
-    console.log(err);
-    
-  }
+  await axios.get("/auth/logout");
+
+setData(prev => ({
+  ...prev,
+  user: null,
+  isAuthenticated: false,
+  
+}));
+navigate("/login");
   }
   return (
     <nav className="w-full bg-white shadow-md px-6 sm:px-8 py-4 relative">

@@ -19,16 +19,16 @@ const Expenses = () => {
 
   const deleteHandler = (ExpenseId: string) => {
     const expenseToDelete = data.expenses.find(
-      (e: ExpenseData) => e.id === ExpenseId
+      (e: ExpenseData) => e._id === ExpenseId
     );
     if (!expenseToDelete) return;
 
     const updatedExpenses = data.expenses.filter(
-      (e: ExpenseData) => e.id !== ExpenseId
+      (e: ExpenseData) => e._id !== ExpenseId
     );
 
     const updatedBudgets = data.budgets.map((b: BudgetData) => {
-      if (b.id === expenseToDelete.budgetId) {
+      if (b._id === expenseToDelete.budgetId) {
         return {
           ...b,
           spent: b.spent - expenseToDelete.amount,
@@ -178,7 +178,7 @@ const Expenses = () => {
 
         {filteredExpenses.map((elem) => (
           <div
-            key={elem.id}
+            key={elem._id}
             className="grid grid-cols-5 p-3 border-t"
           >
             <p>{elem.name}</p>
@@ -186,7 +186,7 @@ const Expenses = () => {
             <p>{elem.category}</p>
             <p>{elem.month}</p>
             <button
-              onClick={() => deleteHandler(elem.id)}
+              onClick={() => deleteHandler(elem._id)}
               className="text-red-500 font-semibold"
             >
               Delete
@@ -199,7 +199,7 @@ const Expenses = () => {
       <div className="md:hidden flex flex-col gap-4">
         {filteredExpenses.map((elem) => (
           <div
-            key={elem.id}
+            key={elem._id}
             className="bg-white rounded-lg shadow p-4"
           >
             <div className="flex justify-between">
@@ -210,7 +210,7 @@ const Expenses = () => {
               {elem.category} • {elem.month}
             </p>
             <button
-              onClick={() => deleteHandler(elem.id)}
+              onClick={() => deleteHandler(elem._id)}
               className="text-red-500 font-semibold mt-2"
             >
               Delete

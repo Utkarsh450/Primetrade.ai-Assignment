@@ -36,19 +36,22 @@ const Dashboard: React.FC = () => {
     0
   );
 
-  const labels = [...new Set(data.budgets.map((b) => b.month))];
+const labels = [
+  ...new Set(filteredBudgets.map((b) => b.month))
+];
+ const chartData = labels.map((month) => {
+  const normalizedMonth = month?.toLowerCase();
 
-  const chartData = labels.map((month) => {
-    const totalBudget = filteredBudgets
-      .filter((b) => b.month === month)
-      .reduce((sum, b) => sum + b.amount, 0);
+  const totalBudget = filteredBudgets
+    .filter((b) => b.month?.toLowerCase() === normalizedMonth)
+    .reduce((sum, b) => sum + b.amount, 0);
 
-    const totalExpense = filteredExpenses
-      .filter((e) => e.month === month?.toLowerCase())
-      .reduce((sum, e) => sum + e.amount, 0);
+  const totalExpense = filteredExpenses
+    .filter((e) => e.month?.toLowerCase() === normalizedMonth)
+    .reduce((sum, e) => sum + e.amount, 0);
 
-    return { month, budget: totalBudget, expense: totalExpense };
-  });
+  return { month, budget: totalBudget, expense: totalExpense };
+});
 
   const sortedData = filteredExpenses
     .slice()
@@ -202,7 +205,7 @@ const Dashboard: React.FC = () => {
 
           {sortedData.map((elem) => (
             <div
-              key={elem.id}
+              key={elem._id}
               className="grid grid-cols-4 p-3 border-b"
             >
               <p>{elem.name}</p>
@@ -221,7 +224,7 @@ const Dashboard: React.FC = () => {
         <div className="md:hidden flex flex-col gap-4">
           {sortedData.map((elem) => (
             <div
-              key={elem.id}
+              key={elem._id}
               className="border rounded-lg p-3"
             >
               <div className="flex justify-between font-semibold">

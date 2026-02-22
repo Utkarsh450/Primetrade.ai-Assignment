@@ -26,23 +26,24 @@ const Register: React.FC = () => {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const response = await axios.post(
-        "auth/register",
-        {
+     await axios.post("/auth/register", {
           username: data.username,
           email: data.email,
           password: data.password,
         },
         {
           withCredentials: true,
-        }
-      );
+        });
 
-      setData((prev) => ({
-        ...prev,
-        token: response.data.token,
-      }));
+const userRes = await axios.get("/auth/me", {
+  withCredentials: true,
+});
 
+setData(prev => ({
+  ...prev,
+  user: userRes.data.user,
+  isAuthenticated: true,
+}));
       navigate("/");
     } catch (err: any) {
       alert(err.response?.data?.message || "Something went wrong");

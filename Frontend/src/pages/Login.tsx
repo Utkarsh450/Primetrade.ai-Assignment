@@ -19,22 +19,28 @@ const Login: React.FC = () => {
     formState: { errors, isSubmitting },
   } = useForm<FormData>({mode: "onChange"});
 
-  const onSubmit = async (data: FormData) => {
-    try {
-      const response = await axios.post("auth/login", data, {
-        withCredentials: true, // 🔥 important for cookies
-      });
+ const onSubmit = async (data: FormData) => {
+  try {
+    await axios.post("/auth/login", data, {
+      withCredentials: true,
+    });
 
-      setData((prev) => ({
-        ...prev,
-        token: response.data.token,
-      }));
+    // 🔥 Immediately fetch authenticated user
+    const userRes = await axios.get("/auth/me", {
+      withCredentials: true,
+    });
 
-      navigate("/");
-    } catch (err: any) {
-      alert(err.response?.data?.message || "Something went wrong");
-    }
-  };
+    setData((prev) => ({
+      ...prev,
+      user: userRes.data.user,
+      isAuthenticated: true,
+    }));
+
+    navigate("/");
+  } catch (err: any) {
+    alert(err.response?.data?.message || "Something went wrong");
+  }
+}; 
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-linear-to-br from-white via-gray-50 to-gray-100">

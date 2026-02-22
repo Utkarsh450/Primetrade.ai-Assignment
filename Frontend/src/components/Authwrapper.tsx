@@ -9,8 +9,11 @@ interface Props {
 const AuthWrapper: React.FC<Props> = ({ children }) => {
   const { data } = useContext(ExpenseContextData)!;
 
-  // If no token → redirect to login
-  if (!data.token) {
+  if (data.loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!data.isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 

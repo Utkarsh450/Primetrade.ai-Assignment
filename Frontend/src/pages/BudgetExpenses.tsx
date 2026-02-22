@@ -3,17 +3,18 @@ import { MoveLeft } from 'lucide-react';
 import { useContext, useState } from "react";
 import { ExpenseContextData } from "../Context/ExpenseContextTypes";
 import type { BudgetData, ExpenseData } from "../Context/types";
-import { nanoid } from "nanoid";
-
+import axios from "../utils/axiosConfig"
 const BudgetExpenses: React.FC = () => {
 
-    const { expenseId } = useParams<string>();
+    const { id } = useParams<{ id: string }>();
     const [isOpen, setisOpen] = useState(false)
     const { data, setData } = useContext(ExpenseContextData);
+    console.log("Route id:", id);
+    console.log("Budgets:", data.budgets);
 
-    const Budget = data.budgets.find((elem: BudgetData) => elem.id === expenseId);
+    const Budget = data.budgets.find((elem: BudgetData) => elem._id === id);
     const expensesForThisBudget: ExpenseData[] = data.expenses.filter(
-        (elem: ExpenseData) => elem.budgetId === expenseId
+        (elem: ExpenseData) => elem.budgetId === id
     ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
     // console.log(expensesForThisBudget);
@@ -27,81 +28,112 @@ const BudgetExpenses: React.FC = () => {
 
     if (!Budget) return <div className="p-8 text-red-500">Budget Not Found!</div>;
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (!id) return;
 
         const expenseAmount = Number(amount);
         if (!expenseAmount || expenseAmount <= 0) return;
 
-        const newExpense: ExpenseData = {
-            id: nanoid(),
-            name: name,
-            category: Budget.category,
-            budgetId: Budget.id,
-            amount: expenseAmount,
-            month: Budget.month.toLowerCase(),
-            description: name,
-            createdAt: new Date(),
-        };
+        try {
+            const res = await axios.post("/expenses", {
+                budgetId: id,
+                name,
+                amount: expenseAmount,
+                month: Budget.month,
+                category: Budget.category,
+            });
 
-        const updatedBudget = {
-            ...Budget,
-            spent: Budget.spent + expenseAmount,
-            ExpenseItems: Budget.ExpenseItems + 1
-        };
+            // 1️⃣ Add expense returned from backend
+            const newExpense = res.data;
 
-        setData(prev => ({
-            ...prev,
-            expenses: [...prev.expenses, newExpense],
-            budgets: prev.budgets.map(b => b.id === Budget.id ? updatedBudget : b)
-        }));
+            // 2️⃣ Update budget locally (since backend incremented it)
+            const updatedBudgets = data.budgets.map(b =>
+                b._id === id
+                    ? {
+                        ...b,
+                        spent: b.spent + expenseAmount,
+                        ExpenseItems: b.ExpenseItems + 1,
+                    }
+                    : b
+            );
 
-        setname("");
-        setamount("");
+            setData(prev => ({
+                ...prev,
+                expenses: [...prev.expenses, newExpense],
+                budgets: updatedBudgets,
+            }));
+
+            setname("");
+            setamount("");
+        } catch (err) {
+            console.error(err);
+        }
     };
     const totalSpent = expensesForThisBudget.reduce((sum, exp) => sum + exp.amount, 0);
     const remaining = Budget.amount - totalSpent;
     const isLimitExceeded = totalSpent >= Budget.amount;
-    const deleteHandler = (ExpenseId: string) => {
-        const expenseToDelete = data.expenses.find((e) => e.id === ExpenseId);
-        if (!expenseToDelete) return;
+    const deleteHandler = async (expenseId: string) => {
+        try {
+            await axios.delete(`/expenses/${expenseId}`);
 
-        const updatedExpenses = data.expenses.filter((e) => e.id !== ExpenseId);
+            const expenseToDelete = data.expenses.find(
+                e => e._id === expenseId
+            );
 
-        const updatedBudgets = data.budgets.map((b) => {
-            if (b.id === expenseToDelete.budgetId) {
-                return {
-                    ...b,
-                    spent: b.spent - expenseToDelete.amount,
-                    ExpenseItems: b.ExpenseItems - 1,
-                };
-            }
-            return b;
-        });
+            if (!expenseToDelete) return;
 
-        setData((prev) => ({
-            ...prev,
-            expenses: updatedExpenses,
-            budgets: updatedBudgets,
-        }));
+            const updatedExpenses = data.expenses.filter(
+                e => e._id !== expenseId
+            );
+
+            const updatedBudgets = data.budgets.map(b =>
+                b._id === expenseToDelete.budgetId
+                    ? {
+                        ...b,
+                        spent: b.spent - expenseToDelete.amount,
+                        ExpenseItems: b.ExpenseItems - 1,
+                    }
+                    : b
+            );
+
+            setData(prev => ({
+                ...prev,
+                expenses: updatedExpenses,
+                budgets: updatedBudgets,
+            }));
+
+        } catch (err) {
+            console.error(err);
+        }
     };
-    const deleteBudget = () => {
-        if (!expenseId) return;
+    const deleteBudget = async () => {
+        if (!id) return;
 
-        const updatedBudgets = data.budgets.filter((b) => b.id !== expenseId);
+        try {
+            await axios.delete(`/budgets/${id}`);
 
-        const updatedExpenses = data.expenses.filter((e) => e.budgetId !== expenseId);
+            const updatedBudgets = data.budgets.filter(
+                b => b._id !== id
+            );
 
-        setData((prev) => ({
-            ...prev,
-            budgets: updatedBudgets,
-            expenses: updatedExpenses,
-        }));
-        navigate(-1);
+            const updatedExpenses = data.expenses.filter(
+                e => e.budgetId !== id
+            );
 
+            setData(prev => ({
+                ...prev,
+                budgets: updatedBudgets,
+                expenses: updatedExpenses,
+            }));
 
+            navigate("/budgets");
 
-    }
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
 
     return (
@@ -231,7 +263,7 @@ const BudgetExpenses: React.FC = () => {
                                 <p className="font-semibold text-md">{elem.name}</p>
                                 <p className="font-semibold text-md flex">{elem.amount}</p>
                                 <p className="font-semibold text-md">{new Date(elem.createdAt).toLocaleDateString()}</p>
-                                <p onClick={() => deleteHandler(elem.id)} className="font-semibold text-red-500 text-md flex">Delete</p>
+                                <p onClick={() => deleteHandler(elem._id)} className="font-semibold text-red-500 text-md flex">Delete</p>
                             </div>
                         })}
                     </div>

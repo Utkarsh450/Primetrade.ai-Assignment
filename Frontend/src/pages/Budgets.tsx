@@ -2,8 +2,9 @@ import { useContext, useState } from "react";
 import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
 import { ExpenseContextData } from "../Context/ExpenseContextTypes";
 import type { BudgetData } from "../Context/types";
-import { nanoid } from "nanoid";
 import { Link } from "react-router-dom";
+
+import axios from "../utils/axiosConfig"
 
 const Budgets: React.FC = () => {
   const [isOpen, setisOpen] = useState<boolean>(false);
@@ -22,31 +23,39 @@ const Budgets: React.FC = () => {
     setShowPicker(false);
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
 
-    const newBudget = {
-      id: nanoid(),
+  if (!monthInput) return;
+
+  const date = new Date(monthInput);
+  const monthName = date
+    .toLocaleString("default", { month: "long" })
+    .toLowerCase();
+
+  try {
+    const res = await axios.post("/budgets", {
       category: name,
-      month: month,
+      month: monthName,
       amount: Number(amount),
-      spent: 0,
       emoji: selectedEmoji,
-      ExpenseItems: 0,
-      createdAt: new Date(),
-      
-    };
-    setData((prev) => ({
+    });
+
+    setData(prev => ({
       ...prev,
-      budgets: [...prev.budgets, newBudget],
+      budgets: [...prev.budgets, res.data],
     }));
 
     setname("");
     setamount("");
+    setMonthInput("");
     setSelectedEmoji("🙂");
-    setmonth("");
     setisOpen(false);
-  };
+
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   const filterByMonth = (items: BudgetData[]) => {
     if (selectedMonth === "all") return items;
@@ -172,8 +181,8 @@ const Budgets: React.FC = () => {
 
             {filteredBudgets.map((item) => (
               <Link
-                to={`/budgets/${item.id}`}
-                key={item.id}
+                to={`/budgets/${item._id}`}
+                key={item._id}
                 className="bg-white border border-zinc-200 rounded-xl p-4 hover:shadow-lg transition-all"
               >
                 <div className="flex items-center gap-4">

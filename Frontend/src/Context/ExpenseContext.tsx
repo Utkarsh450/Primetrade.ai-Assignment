@@ -1,44 +1,67 @@
 import { useState, type ReactNode, useEffect } from "react";
 import type { BudgetData, ExpenseData } from "./types";
 import { ExpenseContextData } from "./ExpenseContextTypes";
+import type { UserType } from "./ExpenseContextTypes";
+import axios from "../utils/axiosConfig";
+
+type ContextType = {
+  user: UserType | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+  budgets: BudgetData[];
+  expenses: ExpenseData[];
+};
 
 const ExpenseContext = ({ children }: { children: ReactNode }) => {
+  const [data, setData] = useState<ContextType>({
+    user: null,
+    isAuthenticated: false,
+    loading: true,
+    budgets: [],
+    expenses: [],
+  });
 
-    const [data, setData] = useState<{ token: string, budgets: BudgetData[]; expenses: ExpenseData[] }>({
-        token: "",
-        budgets: [],
-        expenses: [],
-    });
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        // 1️⃣ Check auth
+        const userRes = await axios.get("/auth/me");
 
-    useEffect(() => {
-        const stored = localStorage.getItem("BudgetData");
+        // 2️⃣ Fetch budgets
+        const budgetsRes = await axios.get("/budgets");
 
-        if (stored) {
-            const storedItem = JSON.parse(stored);
+        // 3️⃣ Fetch expenses
+        const expensesRes = await axios.get("/expenses");
 
-            storedItem.budgets = storedItem.budgets.map((b: Omit<BudgetData, 'createdAt'> & { createdAt: string }) => ({
-                ...b,
-                createdAt: new Date(b.createdAt),
-            }));
+        setData({
+          user: userRes.data.user,
+          isAuthenticated: true,
+          loading: false,
+          budgets: budgetsRes.data,
+          expenses: expensesRes.data,
+        });
 
-            storedItem.expenses = storedItem.expenses.map((e: Omit<ExpenseData, 'createdAt'> & { createdAt: string }) => ({
-                ...e,
-                createdAt: new Date(e.createdAt),
-            }));
+      } catch (err: any) {
+        setData({
+          user: null,
+          isAuthenticated: false,
+          loading: false,
+          budgets: [],
+          expenses: [],
+        });
+      }
+    };
 
-            setData(storedItem);
-        }
-    }, []);
+    initializeApp();
+  }, []);
 
-    useEffect(() => {
-        localStorage.setItem("BudgetData", JSON.stringify(data));
-    }, [data]);
-
-    return (
-        <ExpenseContextData.Provider value={{ data, setData }}>
-            {children}
-        </ExpenseContextData.Provider>
-    );
+  return (
+    <ExpenseContextData.Provider value={{ data, setData }}>
+      {children}
+    </ExpenseContextData.Provider>
+  );
 };
+
+
 
 export default ExpenseContext;

@@ -1,16 +1,16 @@
-export interface BudgetData {
-    id: string;
-    category: string;
-    amount: number;
-    spent: number;
-        month: string;
-    ExpenseItems: number;
-    emoji: string;
-    createdAt: Date;
-}
+export type BudgetData = {
+  _id: string;
+  category: string;
+  month: string;
+  amount: number;
+  spent: number;
+  emoji: string;
+  ExpenseItems: number;
+  createdAt: string | Date;
+};
 
 export interface ExpenseData {
-    id: string;
+    _id: string;
     name: string;
     category: string;
     budgetId: string;
