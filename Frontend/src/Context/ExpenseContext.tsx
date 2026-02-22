@@ -24,13 +24,10 @@ const ExpenseContext = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // 1️⃣ Check auth
         const userRes = await axios.get("/auth/me");
 
-        // 2️⃣ Fetch budgets
         const budgetsRes = await axios.get("/budgets");
 
-        // 3️⃣ Fetch expenses
         const expensesRes = await axios.get("/expenses");
 
         setData({

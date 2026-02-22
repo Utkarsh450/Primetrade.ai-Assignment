@@ -17,13 +17,8 @@ const BudgetExpenses: React.FC = () => {
         (elem: ExpenseData) => elem.budgetId === id
     ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
-    // console.log(expensesForThisBudget);
-
-
     const [amount, setamount] = useState<string>("");
     const [name, setname] = useState<string>("");
-    // console.log(Expenses);
-
     const navigate = useNavigate();
 
     if (!Budget) return <div className="p-8 text-red-500">Budget Not Found!</div>;
@@ -45,10 +40,8 @@ const BudgetExpenses: React.FC = () => {
                 category: Budget.category,
             });
 
-            // 1️⃣ Add expense returned from backend
             const newExpense = res.data;
 
-            // 2️⃣ Update budget locally (since backend incremented it)
             const updatedBudgets = data.budgets.map(b =>
                 b._id === id
                     ? {

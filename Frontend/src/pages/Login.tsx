@@ -25,7 +25,6 @@ const Login: React.FC = () => {
       withCredentials: true,
     });
 
-    // 🔥 Immediately fetch authenticated user
     const userRes = await axios.get("/auth/me", {
       withCredentials: true,
     });
